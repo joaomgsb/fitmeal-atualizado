@@ -1,0 +1,115 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regra para documentos de usuários
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Regra para planos alimentares do usuário
+      match /meal_plans/{planId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Regra para posts de notícias
+    match /news_posts/{postId} {
+      // Permite leitura para todos (público)
+      allow read: if true;
+      
+      // Permite atualização apenas dos campos 'views', 'likes' e 'bookmarks' para usuários autenticados
+      allow update: if request.auth != null && (
+        // Permite incrementar views para qualquer usuário
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) &&
+         request.resource.data.views is number &&
+         request.resource.data.views >= resource.data.views) ||
+        
+        // Permite curtir/descurtir para usuários autenticados
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) &&
+         request.resource.data.likes is list) ||
+        
+        // Permite salvar/dessalvar para usuários autenticados
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bookmarks']) &&
+         request.resource.data.bookmarks is list) ||
+         
+        // Permite atualização combinada de likes e bookmarks
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'bookmarks']) &&
+         request.resource.data.likes is list &&
+         request.resource.data.bookmarks is list)
+      );
+      
+      // Permite criação, atualização completa e exclusão apenas para admins
+      allow create, delete: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      
+      // Permite atualização completa apenas para admins (exceto quando é só campos permitidos)
+      allow update: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views']) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bookmarks']) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'bookmarks']);
+      
+      // Regra para comentários dos posts
+      match /comments/{commentId} {
+        // Permite leitura para todos
+        allow read: if true;
+        
+        // Permite criação para usuários autenticados
+        allow create: if request.auth != null && 
+          request.resource.data.userId == request.auth.uid;
+        
+        // Permite atualização e exclusão apenas para o autor do comentário ou admins
+        allow update, delete: if request.auth != null && (
+          resource.data.userId == request.auth.uid ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true
+        );
+        
+        // Permite curtir comentários para usuários autenticados
+        allow update: if request.auth != null &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) &&
+          request.resource.data.likes is list;
+      }
+    }
+    
+    // Regra para códigos de acesso
+    match /access_codes/{codeId} {
+      // Permite leitura para todos (necessário para validação durante cadastro)
+      allow read: if true;
+      
+      // Permite criação e exclusão apenas para admins
+      allow create, delete: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      
+      // Permite atualização para usuários autenticados sob condições específicas:
+      // - O código não foi usado anteriormente (resource.data.isUsed == false)
+      // - A atualização apenas marca como usado (isUsed = true)
+      // - Define o usuário que usou o código (usedBy = request.auth.uid)
+      // - Define quando foi usado (usedAt)
+      // - Não modifica outros campos
+      allow update: if request.auth != null && (
+        // Admins podem fazer qualquer atualização
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+        // Usuários normais podem apenas marcar código como usado
+        (
+          resource.data.isUsed == false &&
+          request.resource.data.isUsed == true &&
+          request.resource.data.usedBy == request.auth.uid &&
+          request.resource.data.keys().hasAll(['code', 'isUsed', 'usedBy', 'usedAt']) &&
+          request.resource.data.code == resource.data.code
+        )
+      );
+    }
+  }
+}
+
+// Regras para Firebase Storage
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Permite leitura para todos
+    allow read: if true;
+    
+    // Permite upload apenas para administradores autenticados
+    allow write: if request.auth != null && 
+      firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+  }
+}

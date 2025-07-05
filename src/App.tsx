@@ -27,6 +27,8 @@ import AdminPage from './pages/AdminPage';
 import NewsPage from './pages/NewsPage';
 import NewsDetailPage from './pages/NewsDetailPage';
 import AdminNewsPage from './pages/AdminNewsPage';
+import TermsOfUsePage from './pages/TermsOfUsePage';
+import AdminTermsPage from './pages/AdminTermsPage';
 
 function App() {
   useScrollToTop();
@@ -46,9 +48,11 @@ function App() {
           <Route path="lista-compras" element={<PrivateRoute><ShoppingListPage /></PrivateRoute>} />
           <Route path="perfil" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
           <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+          <Route path="admin/termos" element={<AdminRoute><AdminTermsPage /></AdminRoute>} />
           <Route path="news" element={<NewsPage />} />
           <Route path="news/:id" element={<NewsDetailPage />} />
           <Route path="admin/news" element={<AdminRoute><AdminNewsPage /></AdminRoute>} />
+          <Route path="termos-de-uso" element={<TermsOfUsePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />

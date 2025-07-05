@@ -47,7 +47,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li className="flex items-center">
                 <Mail size={16} className="mr-2 text-neutral-400" />
-                <a href="mailto:contato@biofitness.com" className="hover:text-primary-400 transition-colors">contato@fitmeal.com</a>
+                <a href="mailto:contato@fitmeal.com" className="hover:text-primary-400 transition-colors">contato@fitmeal.com</a>
               </li>
             </ul>
           </div>
@@ -56,8 +56,8 @@ const Footer: React.FC = () => {
         <div className="border-t border-neutral-700 mt-8 pt-8 text-sm text-neutral-500 flex flex-col md:flex-row justify-between">
           <p>&copy; {new Date().getFullYear()} FitMeal. Todos os direitos reservados.</p>
           <div className="mt-2 md:mt-0 space-x-4">
-            <a href="#" className="hover:text-primary-400 transition-colors">Termos de Uso</a>
-            <a href="#" className="hover:text-primary-400 transition-colors">Política de Privacidade</a>
+            <Link to="/termos-de-uso" className="hover:text-primary-400 transition-colors">Termos de Uso e Política de Privacidade</Link>
+            <a href="mailto:inova.js001@gmail.com" className="hover:text-primary-400 transition-colors">Contato LGPD</a>
           </div>
         </div>
       </div>

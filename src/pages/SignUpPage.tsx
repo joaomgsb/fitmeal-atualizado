@@ -5,6 +5,8 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Mail, Lock, User, AlertCircle, Key } from 'lucide-react';
 import { validateAccessCode, useAccessCode } from '../lib/accessCodes';
+import TermsOfUseModal from '../components/TermsOfUseModal';
+import { recordTermsAcceptanceWithAudit } from '../lib/termsService';
 
 const SignUpPage: React.FC = () => {
   const [accessCode, setAccessCode] = useState('');
@@ -26,6 +28,10 @@ const SignUpPage: React.FC = () => {
   const [dietPreferences, setDietPreferences] = useState<string[]>([]);
   const [allergies, setAllergies] = useState('');
   const [step, setStep] = useState(1);
+  
+  // Estados para o modal de termos
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const fitnessGoals = [
     { id: 'emagrecimento', label: 'Perda de Peso' },
@@ -66,18 +72,25 @@ const SignUpPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleTermsAcceptance = async () => {
+    setTermsAccepted(true);
+    setShowTermsModal(false);
+    
+    // Mensagem de confirmação
+    setError('');
+    console.log('Termos de uso aceitos pelo usuário');
+  };
 
-    if (!codeValidated) {
-      setError('Por favor, valide seu código de acesso primeiro.');
+  const handleProceedToSignup = () => {
+    if (!termsAccepted) {
+      setShowTermsModal(true);
       return;
     }
+    // Se já aceitou os termos, continua com o cadastro
+    proceedWithSignup();
+  };
 
-    if (password !== confirmPassword) {
-      return setError('As senhas não coincidem');
-    }
-
+  const proceedWithSignup = async () => {
     try {
       setError('');
       setLoading(true);
@@ -104,14 +117,45 @@ const SignUpPage: React.FC = () => {
           allergies: allergies ? allergies.split(',').map(a => a.trim()) : [],
           startDate: new Date().toISOString()
         });
+
+        // Registrar aceitação dos termos de uso
+        await recordTermsAcceptanceWithAudit(
+          userCredential.user.uid,
+          email,
+          name,
+          'signup'
+        );
       }
       
       navigate('/perfil');
-    } catch {
+    } catch (error) {
+      console.error('Erro ao criar conta:', error);
       setError('Falha ao criar conta. Tente novamente.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!codeValidated) {
+      setError('Por favor, valide seu código de acesso primeiro.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      return setError('As senhas não coincidem');
+    }
+
+    // Verificar se todos os campos estão preenchidos
+    if (!name || !email || !password || !confirmPassword || !gender || !age || !height || !weight || !goal) {
+      setError('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    // Abrir modal de termos se ainda não foi aceito
+    handleProceedToSignup();
   };
 
   return (
@@ -373,8 +417,15 @@ const SignUpPage: React.FC = () => {
                   disabled={loading}
                   className="w-full bg-primary-500 text-white py-2 rounded-lg font-medium hover:bg-primary-600 transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'Criando conta...' : 'Criar Conta'}
+                  {loading ? 'Criando conta...' : termsAccepted ? 'Criar Conta' : 'Aceitar Termos e Criar Conta'}
                 </button>
+                {termsAccepted && (
+                  <div className="mt-2 text-center">
+                    <p className="text-sm text-green-600 flex items-center justify-center gap-1">
+                      ✓ Termos de uso aceitos
+                    </p>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -389,6 +440,13 @@ const SignUpPage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Modal de Termos de Uso */}
+      <TermsOfUseModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleTermsAcceptance}
+      />
     </div>
   );
 };

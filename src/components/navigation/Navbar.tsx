@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X, User, Dumbbell, ChevronDown, Settings, FileText, Newspaper } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProfile } from '../../hooks/useProfile';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const { profile } = useProfile();
+  const adminDropdownRef = useRef<HTMLDivElement>(null);
 
   // Effect for handling scroll behavior
   useEffect(() => {
@@ -28,7 +30,20 @@ const Navbar: React.FC = () => {
   // Close menu when navigating
   useEffect(() => {
     setIsMenuOpen(false);
+    setIsAdminDropdownOpen(false);
   }, [location.pathname]);
+
+  // Close admin dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (adminDropdownRef.current && !adminDropdownRef.current.contains(event.target as Node)) {
+        setIsAdminDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navLinks = [
     { name: 'Início', path: '/' },
@@ -38,10 +53,13 @@ const Navbar: React.FC = () => {
     { name: 'Sugestões de Receitas', path: '/sugestoes-receitas' },
     { name: 'Lista de Compras', path: '/lista-compras' },
     { name: 'Rastreador', path: '/tracker' },
-  ].concat(profile?.isAdmin ? [
-    { name: 'Admin', path: '/admin' },
-    { name: 'Admin News', path: '/admin/news' }
-  ] : []);
+  ];
+
+  const adminLinks = [
+    { name: 'Dashboard', path: '/admin', icon: Settings },
+    { name: 'Gerenciar News', path: '/admin/news', icon: Newspaper },
+    { name: 'Termos de Uso', path: '/admin/termos', icon: FileText },
+  ];
 
   return (
     <header 
@@ -56,7 +74,7 @@ const Navbar: React.FC = () => {
             <div className="flex items-center gap-2">
               <img 
                 src="/images/logo.jpeg"
-                alt="Logo"
+                alt="BioFitness Logo"
                 className="w-8 h-8 object-contain"
               />
               <span className="text-xl font-bold font-display text-neutral-800">
@@ -82,6 +100,52 @@ const Navbar: React.FC = () => {
                 {link.name}
               </NavLink>
             ))}
+            
+            {/* Admin Dropdown */}
+            {profile?.isAdmin && (
+              <div className="relative" ref={adminDropdownRef}>
+                <button
+                  onClick={() => setIsAdminDropdownOpen(!isAdminDropdownOpen)}
+                  className={`px-4 py-2 rounded-md transition-colors font-medium flex items-center gap-1 ${
+                    location.pathname.startsWith('/admin')
+                      ? 'text-primary-600 bg-primary-50' 
+                      : 'text-neutral-600 hover:text-primary-500 hover:bg-neutral-100'
+                  }`}
+                >
+                  Admin
+                  <ChevronDown size={16} className={`transition-transform ${isAdminDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isAdminDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+                  >
+                    {adminLinks.map((link) => {
+                      const Icon = link.icon;
+                      return (
+                        <Link
+                          key={link.path}
+                          to={link.path}
+                          className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                            location.pathname === link.path
+                              ? 'text-primary-600 bg-primary-50'
+                              : 'text-neutral-600 hover:text-primary-500 hover:bg-neutral-50'
+                          }`}
+                          onClick={() => setIsAdminDropdownOpen(false)}
+                        >
+                          <Icon size={16} />
+                          {link.name}
+                        </Link>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </div>
+            )}
           </nav>
 
           {/* User Profile & Mobile/Tablet Menu Button */}
@@ -129,6 +193,35 @@ const Navbar: React.FC = () => {
                   {link.name}
                 </NavLink>
               ))}
+              
+              {/* Admin Links for Mobile */}
+              {profile?.isAdmin && (
+                <>
+                  <div className="border-t border-gray-200 my-2"></div>
+                  <div className="px-4 py-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Administração
+                    </p>
+                  </div>
+                  {adminLinks.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
+                          location.pathname === link.path
+                            ? 'text-primary-600 bg-primary-50 font-medium'
+                            : 'text-neutral-600 hover:text-primary-500 hover:bg-neutral-100'
+                        }`}
+                      >
+                        <Icon size={18} />
+                        {link.name}
+                      </Link>
+                    );
+                  })}
+                </>
+              )}
             </nav>
           </div>
         </motion.div>

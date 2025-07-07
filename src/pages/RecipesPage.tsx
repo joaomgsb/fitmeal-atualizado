@@ -51,7 +51,7 @@ const RecipesPage: React.FC = () => {
     const fetchRecipes = async () => {
       setFetchLoading(true);
       try {
-        const response = await fetch("http://31.97.169.70:3000/recipes");
+        const response = await fetch("https://api.receitasnutri.com.br/recipes");
         if (!response.ok) {
           throw new Error("Erro ao buscar receitas");
         }
@@ -113,7 +113,7 @@ const RecipesPage: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://31.97.169.70:3000/recipes?page=${nextPage}`
+        `https://api.receitasnutri.com.br/recipes?page=${nextPage}`
       );
       if (!response.ok) {
         throw new Error("Erro ao carregar mais receitas");

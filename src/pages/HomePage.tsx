@@ -4,12 +4,9 @@ import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, Dumbbell, Utensils, ShoppingBag, LineChart } from 'lucide-react';
 import HeroSection from '../components/home/HeroSection';
 import FeatureCard from '../components/home/FeatureCard';
-import RecipeCard from '../components/recipe/RecipeCard';
-import { useFeaturedRecipes } from '../hooks/useRecipes';
+
 
 const HomePage: React.FC = () => {
-  const { recipes: featuredRecipes, loading: recipesLoading } = useFeaturedRecipes(4);
-  
   const features = [
     {
       icon: <Utensils size={24} className="text-primary-500" />,
@@ -71,50 +68,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
       
-      {/* Featured Recipes */}
-      <section className="py-20 bg-neutral-50">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
-            <div>
-              <h2 className="text-3xl font-bold font-display mb-4">
-                Receitas em <span className="text-primary-500">Destaque</span>
-              </h2>
-              <p className="text-neutral-600 max-w-2xl">
-                Experimente nossas receitas mais populares, criadas para potencializar seus resultados fitness.
-              </p>
-            </div>
-            <Link 
-              to="/receitas" 
-              className="mt-4 md:mt-0 inline-flex items-center text-primary-500 font-medium hover:text-primary-600 transition-colors"
-            >
-              Ver todas as receitas <ArrowRight size={18} className="ml-1" />
-            </Link>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {recipesLoading ? (
-              // Skeleton loading
-              Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="bg-white rounded-xl overflow-hidden shadow-card animate-pulse">
-                  <div className="h-48 bg-neutral-200"></div>
-                  <div className="p-4">
-                    <div className="h-4 bg-neutral-200 rounded mb-2"></div>
-                    <div className="h-3 bg-neutral-200 rounded mb-4"></div>
-                    <div className="flex justify-between">
-                      <div className="h-3 bg-neutral-200 rounded w-16"></div>
-                      <div className="h-3 bg-neutral-200 rounded w-16"></div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              featuredRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
-              ))
-            )}
-          </div>
-        </div>
-      </section>
+
       
       {/* Nutritionist Section */}
       <section className="py-20 bg-white">

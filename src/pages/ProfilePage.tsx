@@ -29,6 +29,17 @@ export interface UserProfile {
   height: number;
   weight: number;
   goal: string;
+  activityLevel: string;
+  workoutFrequency: string;
+  workoutIntensity: string;
+  workoutDuration: string;
+  basalMetabolicRate: number;
+  totalDailyEnergyExpenditure: number;
+  knowsCalorieNeeds: boolean;
+  customCalorieNeeds: number;
+  customProteinNeeds: number;
+  customCarbNeeds: number;
+  customFatNeeds: number;
   avatar: string;
   dietPreferences: string[];
   allergies: string[];
@@ -128,8 +139,8 @@ const ProfilePage: React.FC = () => {
     try {
       await logout();
       navigate('/login');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+    } catch {
+      console.error('Erro ao fazer logout');
     }
   };
 
@@ -146,7 +157,7 @@ const ProfilePage: React.FC = () => {
           duration: 2000
         });
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao excluir o plano. Tente novamente.', {
         duration: 3000
       });
@@ -163,13 +174,53 @@ const ProfilePage: React.FC = () => {
     setIsEditing(!isEditing);
   };
 
+  // Função para calcular TMB (Taxa Metabólica Basal) usando fórmula de Mifflin-St Jeor
+  const calculateBMR = (weight: number, height: number, age: number, gender: string) => {
+    if (gender === 'Masculino') {
+      return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
+    } else {
+      return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
+    }
+  };
+
+  // Função para calcular TDEE (Gasto Energético Total Diário)
+  const calculateTDEE = (bmr: number, activityLevel: string) => {
+    const activityMultipliers = {
+      'sedentario': 1.2,
+      'leve': 1.375,
+      'moderado': 1.55,
+      'ativo': 1.725,
+      'muito_ativo': 1.9
+    };
+    
+    return Math.round(bmr * activityMultipliers[activityLevel as keyof typeof activityMultipliers]);
+  };
+
   const handleInputChange = (field: keyof UserProfile, value: string | number | string[]) => {
     if (!localProfile) return;
-
-    setLocalProfile({
-      ...localProfile,
-      [field]: value
-    });
+    
+    const updatedProfile = { ...localProfile, [field]: value };
+    
+    // Recalcular TMB e TDEE quando dados físicos ou nível de atividade mudarem
+    if (field === 'weight' || field === 'height' || field === 'age' || field === 'gender') {
+      const bmr = calculateBMR(
+        field === 'weight' ? value as number : localProfile.weight,
+        field === 'height' ? value as number : localProfile.height,
+        field === 'age' ? value as number : localProfile.age,
+        field === 'gender' ? value as string : localProfile.gender
+      );
+      updatedProfile.basalMetabolicRate = bmr;
+      
+      if (localProfile.activityLevel) {
+        updatedProfile.totalDailyEnergyExpenditure = calculateTDEE(bmr, localProfile.activityLevel);
+      }
+    } else if (field === 'activityLevel') {
+              if (Number(localProfile.basalMetabolicRate) > 0) {
+        updatedProfile.totalDailyEnergyExpenditure = calculateTDEE(localProfile.basalMetabolicRate, value as string);
+      }
+    }
+    
+    setLocalProfile(updatedProfile);
   };
 
   const handleAddWeight = async (e: React.FormEvent) => {
@@ -193,7 +244,7 @@ const ProfilePage: React.FC = () => {
       toast.dismiss(loadingToast);
       setNewWeight('');
       setShowWeightModal(false);
-    } catch (_error) {
+    } catch {
       toast.dismiss(loadingToast);
       toast.error('Erro ao salvar o peso. Tente novamente.');
     }
@@ -251,7 +302,7 @@ const ProfilePage: React.FC = () => {
       toast.dismiss(loadingToast);
       setNewBodyFat('');
       setShowBodyFatModal(false);
-    } catch (_error) {
+    } catch {
       toast.dismiss(loadingToast);
       toast.error('Erro ao salvar o percentual de gordura. Tente novamente.');
     }
@@ -773,6 +824,170 @@ const ProfilePage: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4">Atividade Física e Metabolismo</h3>
+
+                    {isEditing ? (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-500 mb-1">Nível de Atividade</label>
+                            <select
+                              value={localProfile.activityLevel || ''}
+                              onChange={(e) => handleInputChange('activityLevel', e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            >
+                              <option value="" disabled>Selecione</option>
+                              <option value="sedentario">Sedentário - Pouco ou nenhum exercício</option>
+                              <option value="leve">Levemente Ativo - Exercício leve 1-3 dias/semana</option>
+                              <option value="moderado">Moderadamente Ativo - Exercício moderado 3-5 dias/semana</option>
+                              <option value="ativo">Muito Ativo - Exercício intenso 6-7 dias/semana</option>
+                              <option value="muito_ativo">Extremamente Ativo - Exercício muito intenso, trabalho físico</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-500 mb-1">Frequência de Treinos</label>
+                            <select
+                              value={localProfile.workoutFrequency || ''}
+                              onChange={(e) => handleInputChange('workoutFrequency', e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            >
+                              <option value="" disabled>Selecione</option>
+                              <option value="1-2">1-2 vezes por semana</option>
+                              <option value="3-4">3-4 vezes por semana</option>
+                              <option value="5-6">5-6 vezes por semana</option>
+                              <option value="7">Todos os dias</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-500 mb-1">Intensidade dos Treinos</label>
+                            <select
+                              value={localProfile.workoutIntensity || ''}
+                              onChange={(e) => handleInputChange('workoutIntensity', e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            >
+                              <option value="" disabled>Selecione</option>
+                              <option value="baixa">Baixa Intensidade - Caminhada, yoga, alongamento</option>
+                              <option value="moderada">Moderada - Corrida leve, musculação moderada</option>
+                              <option value="alta">Alta Intensidade - HIIT, musculação pesada, esportes</option>
+                              <option value="muito_alta">Muito Alta - CrossFit, atletismo profissional</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-500 mb-1">Duração dos Treinos</label>
+                            <select
+                              value={localProfile.workoutDuration || ''}
+                              onChange={(e) => handleInputChange('workoutDuration', e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            >
+                              <option value="" disabled>Selecione</option>
+                              <option value="30min">Até 30 minutos</option>
+                              <option value="45min">30-45 minutos</option>
+                              <option value="60min">45-60 minutos</option>
+                              <option value="90min">60-90 minutos</option>
+                              <option value="120min">Mais de 90 minutos</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {Number(localProfile.basalMetabolicRate) > 0 && (
+                          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 className="font-medium text-blue-900 mb-2">Cálculos Automáticos</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-blue-700 font-medium">Taxa Metabólica Basal (TMB):</span>
+                                <span className="text-blue-800 ml-2">{localProfile.basalMetabolicRate} calorias/dia</span>
+                              </div>
+                              {Number(localProfile.totalDailyEnergyExpenditure) > 0 && (
+                                <div>
+                                  <span className="text-blue-700 font-medium">Gasto Energético Total (TDEE):</span>
+                                  <span className="text-blue-800 ml-2">{localProfile.totalDailyEnergyExpenditure} calorias/dia</span>
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-xs text-blue-600 mt-2">
+                              * Estes valores são calculados automaticamente com base nos seus dados físicos e nível de atividade.
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-neutral-50 p-4 rounded-lg">
+                            <h4 className="text-sm font-medium text-neutral-500 mb-1">Nível de Atividade</h4>
+                            <p className="text-neutral-800">
+                              {localProfile.activityLevel === 'sedentario' ? 'Sedentário' :
+                               localProfile.activityLevel === 'leve' ? 'Levemente Ativo' :
+                               localProfile.activityLevel === 'moderado' ? 'Moderadamente Ativo' :
+                               localProfile.activityLevel === 'ativo' ? 'Muito Ativo' :
+                               localProfile.activityLevel === 'muito_ativo' ? 'Extremamente Ativo' :
+                               'Não informado'}
+                            </p>
+                          </div>
+
+                          <div className="bg-neutral-50 p-4 rounded-lg">
+                            <h4 className="text-sm font-medium text-neutral-500 mb-1">Frequência de Treinos</h4>
+                            <p className="text-neutral-800">
+                              {localProfile.workoutFrequency === '1-2' ? '1-2 vezes por semana' :
+                               localProfile.workoutFrequency === '3-4' ? '3-4 vezes por semana' :
+                               localProfile.workoutFrequency === '5-6' ? '5-6 vezes por semana' :
+                               localProfile.workoutFrequency === '7' ? 'Todos os dias' :
+                               'Não informado'}
+                            </p>
+                          </div>
+
+                          <div className="bg-neutral-50 p-4 rounded-lg">
+                            <h4 className="text-sm font-medium text-neutral-500 mb-1">Intensidade dos Treinos</h4>
+                            <p className="text-neutral-800">
+                              {localProfile.workoutIntensity === 'baixa' ? 'Baixa Intensidade' :
+                               localProfile.workoutIntensity === 'moderada' ? 'Moderada' :
+                               localProfile.workoutIntensity === 'alta' ? 'Alta Intensidade' :
+                               localProfile.workoutIntensity === 'muito_alta' ? 'Muito Alta' :
+                               'Não informado'}
+                            </p>
+                          </div>
+
+                          <div className="bg-neutral-50 p-4 rounded-lg">
+                            <h4 className="text-sm font-medium text-neutral-500 mb-1">Duração dos Treinos</h4>
+                            <p className="text-neutral-800">
+                              {localProfile.workoutDuration === '30min' ? 'Até 30 minutos' :
+                               localProfile.workoutDuration === '45min' ? '30-45 minutos' :
+                               localProfile.workoutDuration === '60min' ? '45-60 minutos' :
+                               localProfile.workoutDuration === '90min' ? '60-90 minutos' :
+                               localProfile.workoutDuration === '120min' ? 'Mais de 90 minutos' :
+                               'Não informado'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Exibir cálculos */}
+                        <div>
+                          {Number(localProfile.basalMetabolicRate) > 0 && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                              <h4 className="font-medium text-blue-900 mb-2">Informações Metabólicas</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-blue-700 font-medium">Taxa Metabólica Basal (TMB):</span>
+                                  <span className="text-blue-800 ml-2">{localProfile.basalMetabolicRate} calorias/dia</span>
+                                </div>
+                                {Number(localProfile.totalDailyEnergyExpenditure) > 0 && (
+                                  <div>
+                                    <span className="text-blue-700 font-medium">Gasto Energético Total (TDEE):</span>
+                                    <span className="text-blue-800 ml-2">{localProfile.totalDailyEnergyExpenditure} calorias/dia</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -1110,8 +1325,8 @@ const ProfilePage: React.FC = () => {
                             ? (() => {
                               const current = localProfile.bodyFatHistory[localProfile.bodyFatHistory.length - 1].bodyFat;
                               const previous = localProfile.bodyFatHistory[localProfile.bodyFatHistory.length - 2].bodyFat;
-                              const diff = (current - previous).toFixed(1);
-                              return `${diff > 0 ? '+' : ''}${diff}%`;
+                              const diff = current - previous;
+                              return `${diff > 0 ? '+' : ''}${diff.toFixed(1)}%`;
                             })()
                             : '--'
                           }

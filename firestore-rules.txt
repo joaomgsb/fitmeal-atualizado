@@ -71,34 +71,34 @@ service cloud.firestore {
       }
     }
     
-    // Regra para códigos de acesso
-    match /access_codes/{codeId} {
-      // Permite leitura para todos (necessário para validação durante cadastro)
-      allow read: if true;
-      
-      // Permite criação e exclusão apenas para admins
-      allow create, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-      
-      // Permite atualização para usuários autenticados sob condições específicas:
-      // - O código não foi usado anteriormente (resource.data.isUsed == false)
-      // - A atualização apenas marca como usado (isUsed = true)
-      // - Define o usuário que usou o código (usedBy = request.auth.uid)
-      // - Define quando foi usado (usedAt)
-      // - Não modifica outros campos
-      allow update: if request.auth != null && (
-        // Admins podem fazer qualquer atualização
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
-        // Usuários normais podem apenas marcar código como usado
-        (
-          resource.data.isUsed == false &&
-          request.resource.data.isUsed == true &&
-          request.resource.data.usedBy == request.auth.uid &&
-          request.resource.data.keys().hasAll(['code', 'isUsed', 'usedBy', 'usedAt']) &&
-          request.resource.data.code == resource.data.code
-        )
-      );
-    }
+    // Regra para códigos de acesso (SISTEMA REMOVIDO - MANTIDO PARA REFERÊNCIA)
+    // match /access_codes/{codeId} {
+    //   // Permite leitura para todos (necessário para validação durante cadastro)
+    //   allow read: if true;
+    //   
+    //   // Permite criação e exclusão apenas para admins
+    //   allow create, delete: if request.auth != null && 
+    //     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    //   
+    //   // Permite atualização para usuários autenticados sob condições específicas:
+    //   // - O código não foi usado anteriormente (resource.data.isUsed == false)
+    //   // - A atualização apenas marca como usado (isUsed = true)
+    //   // - Define o usuário que usou o código (usedBy = request.auth.uid)
+    //   // - Define quando foi usado (usedAt)
+    //   // - Não modifica outros campos
+    //   allow update: if request.auth != null && (
+    //     // Admins podem fazer qualquer atualização
+    //     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+    //     // Usuários normais podem apenas marcar código como usado
+    //     (
+    //       resource.data.isUsed == false &&
+    //       request.resource.data.isUsed == true &&
+    //       request.resource.data.usedBy == request.auth.uid &&
+    //       request.resource.data.keys().hasAll(['code', 'isUsed', 'usedBy', 'usedAt']) &&
+    //       request.resource.data.code == resource.data.code
+    //     )
+    //   );
+    // }
   }
 }
 

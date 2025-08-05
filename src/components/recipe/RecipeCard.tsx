@@ -11,7 +11,7 @@ interface RecipeCardProps {
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const getTotalTime = () => {
-    const match = recipe.totalTime.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+    const match = recipe.totalTime?.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
 
     if (!match) return 0;
 
@@ -61,15 +61,23 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   };
 
   function inferDifficulty(recipe: Recipe): "fácil" | "médio" | "difícil" {
-    const totalSteps = recipe.recipeInstructions.length;
-    const time = recipe.totalTime;
+    const totalSteps = recipe.recipeInstructions?.length || 0;
+    const time = recipe.totalTime || "";
 
-    const minutes = parseInt(time.replace(/\D/g, ""));
+    const minutes = parseInt(time.replace(/\D/g, "")) || 0;
 
     if (totalSteps <= 3 && minutes <= 20) return "fácil";
     if (totalSteps <= 5 && minutes <= 40) return "médio";
     return "difícil";
   }
+
+  // Valores padrão para evitar erros
+  const imageUrl = recipe.image?.url || 'https://images.pexels.com/photos/1640773/pexels-photo-1640773.jpeg';
+  const recipeUrl = recipe.url || '#';
+  const recipeName = recipe.name || 'Nome da receita não disponível';
+  const recipeDescription = recipe.description || 'Descrição não disponível';
+  const recipeCategory = recipe.recipeCategory || 'Categoria não definida';
+  const authorName = recipe.author?.name || '';
 
   return (
     <motion.div
@@ -77,23 +85,23 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       transition={{ duration: 0.2 }}
       className="bg-white rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all"
     >
-      <Link to={`${recipe.url}`} target="_blank">
+      <Link to={recipeUrl} target="_blank">
         <div className="relative">
           <img
-            src={recipe.image.url}
-            alt={recipe.name}
+            src={imageUrl}
+            alt={recipeName}
             className="w-full h-48 object-cover"
           />
           <div className="absolute top-3 left-3">
             <span
               className={`text-xs font-medium px-2 py-1 rounded-md ${getCategoryBadgeColor(
-                recipe.recipeCategory
+                recipeCategory
               )}`}
             >
-              {recipe.recipeCategory}
+              {recipeCategory}
             </span>
           </div>
-          {recipe.author.name === "TudoGostoso" && (
+          {authorName === "TudoGostoso" && (
             <div className="absolute top-3 right-3">
               <span className="text-xs font-medium px-2 py-1 rounded-md bg-orange-100 text-orange-800">
                 Tudo Gostoso
@@ -104,10 +112,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 
         <div className="p-4">
           <h3 className="text-lg font-semibold mb-2 line-clamp-1">
-            {recipe.name}
+            {recipeName}
           </h3>
           <p className="text-neutral-600 text-sm mb-4 line-clamp-2">
-            {decode(recipe.description)}
+            {decode(recipeDescription)}
           </p>
 
           <div className="flex items-center justify-between text-sm text-neutral-500">

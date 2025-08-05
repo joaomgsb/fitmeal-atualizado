@@ -130,7 +130,7 @@ const LoginPage: React.FC = () => {
             </Link>
           </p>
           <p className="text-neutral-500 text-sm mt-2">
-            Você precisará de um código de acesso fornecido pela academia.
+            Crie sua conta gratuitamente para começar sua jornada fitness.
           </p>
         </div>
       </div>

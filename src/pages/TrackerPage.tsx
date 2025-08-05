@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { useMealPlans } from '../hooks/useMealPlans';
 import { Link } from 'react-router-dom';
+import { getFoodNutritionInfo, FoodNutritionInfo } from '../lib/openai';
 
 interface Food {
   name: string;
@@ -87,6 +88,7 @@ const TrackerPage: React.FC = () => {
   const [dailyMeals, setDailyMeals] = useState<Meal[]>([]);
   const [showEditMealModal, setShowEditMealModal] = useState(false);
   const [mealToEdit, setMealToEdit] = useState<Meal | null>(null);
+  const [loadingNutrition, setLoadingNutrition] = useState<number | null>(null); // Para controlar loading por alimento
   
   const { savedPlans } = useMealPlans();
   const selectedPlan: Plan | undefined = savedPlans.find(plan => plan.id === selectedPlanId)?.plan;
@@ -113,11 +115,28 @@ const TrackerPage: React.FC = () => {
   // Inicializa as metas e as refeições diárias quando um plano é selecionado ou a data muda (simplificado para plano selecionado por enquanto)
   React.useEffect(() => {
     if (selectedPlan) {
-      setGoals({ // Inicializa as metas com base no plano, adicionando um offset
-        calories: selectedPlan.overview.calories + 500,
-        protein: selectedPlan.overview.protein + 20,
-        carbs: selectedPlan.overview.carbs + 50,
-        fat: selectedPlan.overview.fat + 10
+      // Calcula o total de calorias das refeições do plano para usar como meta
+      const totalPlanCalories = selectedPlan.meals.reduce((total, meal) => {
+        return total + (meal.totalCalories || 0);
+      }, 0);
+      
+      const totalPlanProtein = selectedPlan.meals.reduce((total, meal) => {
+        return total + (meal.totalProtein || 0);
+      }, 0);
+      
+      const totalPlanCarbs = selectedPlan.meals.reduce((total, meal) => {
+        return total + (meal.totalCarbs || 0);
+      }, 0);
+      
+      const totalPlanFat = selectedPlan.meals.reduce((total, meal) => {
+        return total + (meal.totalFat || 0);
+      }, 0);
+      
+      setGoals({ // Inicializa as metas com base no total das refeições do plano
+        calories: totalPlanCalories,
+        protein: totalPlanProtein,
+        carbs: totalPlanCarbs,
+        fat: totalPlanFat
       });
       // Inicializa as refeições diárias com as refeições do plano. 
       // Em uma aplicação real, você buscaria/filtraria as refeições específicas para a currentDate
@@ -229,6 +248,39 @@ const TrackerPage: React.FC = () => {
     setShowEditMealModal(false);
   };
 
+  // Função para buscar informações nutricionais automaticamente
+  const handleAutoFillNutrition = async (foodIndex: number) => {
+    if (!mealToEdit) return;
+    
+    const food = mealToEdit.foods[foodIndex];
+    if (!food.name.trim()) {
+      alert('Por favor, digite o nome do alimento primeiro.');
+      return;
+    }
+    
+    setLoadingNutrition(foodIndex);
+    
+    try {
+      const nutritionInfo = await getFoodNutritionInfo(food.name, food.amount);
+      
+      const newFoods = [...mealToEdit.foods];
+      newFoods[foodIndex] = {
+        ...newFoods[foodIndex],
+        calories: nutritionInfo.calories,
+        protein: nutritionInfo.protein,
+        carbs: nutritionInfo.carbs,
+        fat: nutritionInfo.fat
+      };
+      
+      setMealToEdit({ ...mealToEdit, foods: newFoods });
+    } catch (error) {
+      console.error('Erro ao buscar informações nutricionais:', error);
+      alert('Erro ao buscar informações nutricionais. Tente novamente.');
+    } finally {
+      setLoadingNutrition(null);
+    }
+  };
+
   // Função para abrir o modal de edição
   const handleEditMeal = (meal: Meal) => {
       setMealToEdit(meal);
@@ -263,28 +315,7 @@ const TrackerPage: React.FC = () => {
                 <Clock size={18} />
                 Diário
               </button>
-              <button
-                onClick={() => setActiveView('semanal')}
-                className={`px-4 py-2 rounded-md flex items-center gap-2 ${
-                  activeView === 'semanal' 
-                    ? 'bg-primary-500 text-white' 
-                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                }`}
-              >
-                <BarChart3 size={18} />
-                Semanal
-              </button>
-              <button
-                onClick={() => setActiveView('mensal')}
-                className={`px-4 py-2 rounded-md flex items-center gap-2 ${
-                  activeView === 'mensal' 
-                    ? 'bg-primary-500 text-white' 
-                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                }`}
-              >
-                <LucideLineChart size={18} />
-                Mensal
-              </button>
+
               
               {/* Plan Selector */}
               <div className="relative ml-auto">
@@ -374,13 +405,16 @@ const TrackerPage: React.FC = () => {
     );
   }
 
-  // Dados do plano selecionado - Agora calculados a partir do estado dailyMeals
-  // Calcular os totais a partir das refeições no estado dailyMeals
+  // Dados do plano selecionado - Calculados apenas das refeições marcadas como completadas
   const calculatedTotals = dailyMeals.reduce((totals, meal) => {
-    totals.calories += meal.totalCalories || 0; // Usar 0 se totalCalories for undefined
-    totals.protein += meal.totalProtein || 0;
-    totals.carbs += meal.totalCarbs || 0;
-    totals.fat += meal.totalFat || 0;
+    const mealId = String(meal.id || `${meal.time}-${meal.name}`);
+    // Só conta se a refeição está marcada como completada
+    if (completedMeals.has(mealId)) {
+      totals.calories += meal.totalCalories || 0;
+      totals.protein += meal.totalProtein || 0;
+      totals.carbs += meal.totalCarbs || 0;
+      totals.fat += meal.totalFat || 0;
+    }
     return totals;
   }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
@@ -426,28 +460,7 @@ const TrackerPage: React.FC = () => {
               <Clock size={18} />
               Diário
             </button>
-            <button
-              onClick={() => setActiveView('semanal')}
-              className={`px-4 py-2 rounded-md flex items-center gap-2 ${
-                activeView === 'semanal' 
-                  ? 'bg-primary-500 text-white' 
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-              }`}
-            >
-              <BarChart3 size={18} />
-              Semanal
-            </button>
-            <button
-              onClick={() => setActiveView('mensal')}
-              className={`px-4 py-2 rounded-md flex items-center gap-2 ${
-                activeView === 'mensal' 
-                  ? 'bg-primary-500 text-white' 
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-              }`}
-            >
-              <LucideLineChart size={18} />
-              Mensal
-            </button>
+
             
             {/* Plan Selector */}
             <div className="relative ml-auto">
@@ -605,7 +618,11 @@ const TrackerPage: React.FC = () => {
                       <span className="font-medium text-neutral-800">{remainingCalories >= 0 ? remainingCalories : 0}</span> kcal restantes
                     </div>
                     <div>
-                      Macro split: <span className="font-medium text-neutral-800">{Math.round((totalProtein * 4 / totalCalories) * 100)}% / {Math.round((totalCarbs * 4 / totalCalories) * 100)}% / {Math.round((totalFat * 9 / totalCalories) * 100)}%</span>
+                      Macro split: <span className="font-medium text-neutral-800">
+                        {totalCalories > 0 ? Math.round((totalProtein * 4 / totalCalories) * 100) : 0}% / 
+                        {totalCalories > 0 ? Math.round((totalCarbs * 4 / totalCalories) * 100) : 0}% / 
+                        {totalCalories > 0 ? Math.round((totalFat * 9 / totalCalories) * 100) : 0}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -776,6 +793,11 @@ const TrackerPage: React.FC = () => {
                             </div>
 
                             <h4 className="font-semibold text-neutral-800 mt-4 mb-2">Alimentos:</h4>
+                            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+                                <p className="text-sm text-blue-700">
+                                    💡 <strong>Dica:</strong> Digite o nome do alimento e clique em "Buscar Info Nutricional" para preencher automaticamente as calorias e macronutrientes!
+                                </p>
+                            </div>
                             {mealToEdit.foods.map((food, foodIndex) => (
                                 <div key={foodIndex} className="border border-neutral-200 rounded-md p-3 space-y-2 bg-neutral-50">
                                     <div>
@@ -803,6 +825,35 @@ const TrackerPage: React.FC = () => {
                                             }}
                                             className="mt-1 block w-full border border-neutral-300 rounded-md shadow-sm p-2 text-sm"
                                         />
+                                    </div>
+                                    
+                                    {/* Botão para busca automática de informações nutricionais */}
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleAutoFillNutrition(foodIndex)}
+                                            disabled={loadingNutrition === foodIndex || !food.name.trim()}
+                                            className={`px-3 py-1 text-sm rounded-md flex items-center gap-2 transition-colors ${
+                                                loadingNutrition === foodIndex
+                                                    ? 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
+                                                    : 'bg-primary-100 text-primary-700 hover:bg-primary-200'
+                                            }`}
+                                        >
+                                            {loadingNutrition === foodIndex ? (
+                                                <>
+                                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Buscando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                                                    Buscar Info Nutricional
+                                                </>
+                                            )}
+                                        </button>
                                     </div>
                                     {/* Campos de macros - Simplificados por enquanto, edição completa exigiria mais inputs */}
                                      <div className="grid grid-cols-3 gap-3">

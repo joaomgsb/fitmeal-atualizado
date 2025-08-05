@@ -143,7 +143,7 @@ const MealPlansPage: React.FC = () => {
             </div>
 
             {/* Gerador de Plano */}
-            <div className="max-w-lg mx-auto">
+            <div className="w-full">
               <GenerateMealPlanButton onPlanGenerated={handlePlanGenerated} />
             </div>
           </div>

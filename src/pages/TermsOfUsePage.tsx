@@ -46,7 +46,7 @@ const TermsOfUsePage: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-800 mb-3">1.1 Identificação da Plataforma</h3>
               <ul className="space-y-2 text-gray-700 ml-4">
                 <li>• <strong>Nome:</strong> FitMeal</li>
-                <li>• <strong>URL:</strong> https://fitmeal.netlify.app</li>
+                <li>• <strong>URL:</strong> https://fitmealfit.netlify.app</li>
                 <li>• <strong>Aplicativo móvel:</strong> Disponível para iOS e Android</li>
                 <li>• <strong>Finalidade:</strong> Plataforma digital dedicada ao fornecimento de receitas fitness, orientações nutricionais, informações sobre alimentação saudável e comunidade interativa</li>
                 <li>• <strong>Desenvolvedor:</strong> Inova.Js</li>

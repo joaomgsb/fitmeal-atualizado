@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Trash2, Check, Plus, X, Download } from 'lucide-react';
+import { ShoppingBag, Check, Plus, X, Download } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import PageTransition from '../components/PageTransition';
 import ShoppingListPDF from '../components/shopping/ShoppingListPDF';
+import { isMobile, exportPDF } from '../lib/pdfUtils';
 
 interface ShoppingItem {
   id: string;
@@ -20,6 +21,7 @@ const ShoppingListPage: React.FC = () => {
   });
   
   const [newItem, setNewItem] = useState({ name: '', amount: '' });
+  const [isExporting, setIsExporting] = useState(false);
   
   useEffect(() => {
     localStorage.setItem('shopping-list', JSON.stringify(items));
@@ -46,6 +48,20 @@ const ShoppingListPage: React.FC = () => {
 
   const clearAll = () => {
     setItems([]);
+  };
+
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      const pdfDocument = <ShoppingListPDF items={items} />;
+      const fileName = `lista-compras-${new Date().toISOString().split('T')[0]}.pdf`;
+      await exportPDF(pdfDocument, fileName);
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -115,27 +131,45 @@ const ShoppingListPage: React.FC = () => {
               <h2 className="text-xl font-bold">Sua Lista</h2>
               <div className="flex flex-wrap gap-2">
                 {items.length > 0 && (
-                  <PDFDownloadLink
-                    document={<ShoppingListPDF items={items} />}
-                    fileName={`lista-compras-${new Date().toISOString().split('T')[0]}.pdf`}
-                  >
-                    {({ loading }) => (
-                      <button
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                          loading
-                            ? 'bg-gray-400 text-white cursor-not-allowed'
-                            : 'bg-red-500 text-white hover:bg-red-600'
-                        }`}
-                        disabled={loading}
-                      >
-                        <Download size={16} />
-                        <span className="hidden sm:inline">
-                          {loading ? 'Gerando PDF...' : 'Exportar PDF'}
-                        </span>
-                        <span className="sm:hidden">PDF</span>
-                      </button>
-                    )}
-                  </PDFDownloadLink>
+                  isMobile ? (
+                    <button
+                      onClick={handleExportPDF}
+                      disabled={isExporting}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                        isExporting
+                          ? 'bg-gray-400 text-white cursor-not-allowed'
+                          : 'bg-red-500 text-white hover:bg-red-600'
+                      }`}
+                    >
+                      <Download size={16} />
+                      <span className="hidden sm:inline">
+                        {isExporting ? 'Gerando PDF...' : 'Exportar PDF'}
+                      </span>
+                      <span className="sm:hidden">PDF</span>
+                    </button>
+                  ) : (
+                    <PDFDownloadLink
+                      document={<ShoppingListPDF items={items} />}
+                      fileName={`lista-compras-${new Date().toISOString().split('T')[0]}.pdf`}
+                    >
+                      {({ loading }) => (
+                        <button
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                            loading
+                              ? 'bg-gray-400 text-white cursor-not-allowed'
+                              : 'bg-red-500 text-white hover:bg-red-600'
+                          }`}
+                          disabled={loading}
+                        >
+                          <Download size={16} />
+                          <span className="hidden sm:inline">
+                            {loading ? 'Gerando PDF...' : 'Exportar PDF'}
+                          </span>
+                          <span className="sm:hidden">PDF</span>
+                        </button>
+                      )}
+                    </PDFDownloadLink>
+                  )
                 )}
                 <button
                   onClick={clearChecked}

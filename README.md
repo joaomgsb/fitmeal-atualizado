@@ -26,7 +26,7 @@ A **Biofitness** é uma plataforma web completa voltada para nutrição esportiv
 ## ⚡ Funcionalidades Principais
 
 ### 🔐 Sistema de Autenticação
-- **Cadastro com código de acesso**: Apenas alunos com códigos válidos fornecidos pela academia podem se registrar
+- **Cadastro direto**: Qualquer pessoa pode se registrar na plataforma
 - **Login/Logout seguro**: Autenticação via Firebase Auth
 - **Recuperação de senha**: Sistema de reset por email
 - **Perfis diferenciados**: Usuários normais e administradores
@@ -334,7 +334,7 @@ src/
 #### **Cadastro (`/cadastro`)**
 **Arquivo**: `src/pages/SignUpPage.tsx`
 - **Processo em 2 etapas**:
-  1. **Validação do Código**: Verificação do código de acesso
+  1. **Cadastro Direto**: Registro sem necessidade de código de acesso
   2. **Dados Pessoais**: Informações completas do perfil
 - Validação em tempo real
 - Criação automática do perfil no Firestore
@@ -434,19 +434,7 @@ interface SavedMealPlan {
 }
 ```
 
-### **Códigos de Acesso (`access_codes/{codeId}`)**
-```typescript
-interface AccessCode {
-  id: string;
-  code: string;
-  isUsed: boolean;
-  usedBy?: string;
-  usedAt?: string;
-  createdAt: string;
-  createdBy: string;
-  description?: string;
-}
-```
+
 
 ### **Posts de News (`news_posts/{postId}`)**
 ```typescript
@@ -477,10 +465,6 @@ interface NewsPost {
 ### **Regras de Segurança Firestore**
 - **Usuários**: Acesso apenas aos próprios dados
 - **Planos**: Vinculados ao usuário autenticado
-- **Códigos de Acesso**: 
-  - Leitura pública (para validação)
-  - Criação/exclusão apenas para admins
-  - Atualização controlada para marcar como usado
 - **News Posts**:
   - Leitura pública para posts publicados
   - Criação/edição apenas para admins

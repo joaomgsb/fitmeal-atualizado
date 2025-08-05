@@ -5,6 +5,7 @@ import {
   Calendar, User, Heart, MessageCircle, TrendingUp,
   Save, X, Upload, Image as ImageIcon, Loader2
 } from 'lucide-react';
+import RichContentEditor from '../components/news/RichContentEditor';
 import { 
   collection, 
   query, 
@@ -670,13 +671,10 @@ const AdminNewsPage: React.FC = () => {
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Conteúdo *
                   </label>
-                  <textarea
+                  <RichContentEditor
                     value={formData.content}
-                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    rows={12}
+                    onChange={(content) => setFormData(prev => ({ ...prev, content }))}
                     placeholder="Escreva o conteúdo completo do artigo..."
-                    required
                   />
                 </div>
                 

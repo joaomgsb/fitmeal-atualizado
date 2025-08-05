@@ -8,7 +8,9 @@ import {
   UserCredential,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
+import { toast } from 'react-hot-toast';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -38,7 +40,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Verificar se o usuário foi excluído
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        if (userData.isDeleted) {
+          // Fazer logout e mostrar erro
+          await signOut(auth);
+          throw new Error('Sua conta foi excluída pelo administrador. Entre em contato para mais informações.');
+        }
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes('excluída')) {
+        throw error;
+      } else {
+        throw new Error('Email ou senha incorretos.');
+      }
+    }
   };
 
   const logout = () => {
@@ -50,9 +73,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       setLoading(false);
+
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          if (userData.deletedAt) {
+            toast.error('Sua conta foi excluída. Por favor, faça login novamente.');
+            await logout();
+          }
+        }
+      }
     });
 
     return unsubscribe;

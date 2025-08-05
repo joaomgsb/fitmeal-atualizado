@@ -33,6 +33,16 @@ export interface UserProfile {
   weight: number;
   goal: string;
   activityLevel: string;
+  workoutFrequency: string;
+  workoutIntensity: string;
+  workoutDuration: string;
+  basalMetabolicRate: number;
+  totalDailyEnergyExpenditure: number;
+  knowsCalorieNeeds: boolean;
+  customCalorieNeeds: number;
+  customProteinNeeds: number;
+  customCarbNeeds: number;
+  customFatNeeds: number;
   dietPreferences: string[];
   allergies: string[];
   startDate: string;
@@ -74,6 +84,16 @@ export const useProfile = () => {
             weight: 0,
             goal: '',
             activityLevel: '',
+            workoutFrequency: '',
+            workoutIntensity: '',
+            workoutDuration: '',
+            basalMetabolicRate: 0,
+            totalDailyEnergyExpenditure: 0,
+            knowsCalorieNeeds: false,
+            customCalorieNeeds: 0,
+            customProteinNeeds: 0,
+            customCarbNeeds: 0,
+            customFatNeeds: 0,
             dietPreferences: [],
             allergies: [],
             startDate: new Date().toISOString(),

@@ -27,6 +27,7 @@ import {
 import { db } from '../lib/firebase';
 import { toast } from 'react-hot-toast';
 import PageTransition from '../components/PageTransition';
+import NewsContentRenderer from '../components/news/NewsContentRenderer';
 
 interface Comment {
   id: string;
@@ -422,9 +423,9 @@ const NewsDetailPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <div 
+              <NewsContentRenderer 
+                content={post.content}
                 className="text-neutral-700 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }}
               />
             </motion.article>
 

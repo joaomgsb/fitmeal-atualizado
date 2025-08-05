@@ -56,7 +56,7 @@ export const uploadImageToImgBB = async (file: File): Promise<string> => {
 // Função alternativa usando Cloudinary (também gratuito)
 export const uploadImageToCloudinary = async (file: File): Promise<string> => {
   try {
-    const CLOUDINARY_UPLOAD_PRESET = 'biofitness_preset'; // Você precisa criar este preset
+    const CLOUDINARY_UPLOAD_PRESET = 'bigiron_preset'; // Você precisa criar este preset
     const CLOUDINARY_CLOUD_NAME = 'seu-cloud-name'; // Substitua pelo seu cloud name
     
     const formData = new FormData();

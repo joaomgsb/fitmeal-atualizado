@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail } from 'lucide-react';
+import { Instagram, Facebook, MessageCircle, Mail } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -11,13 +11,24 @@ const Footer: React.FC = () => {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center">
               <span className="text-xl font-bold text-white">
-                Fit<span className="text-primary-400">Meal</span>
+                Big<span className="text-primary-400">Iron</span>
               </span>
             </Link>
             <p className="mt-4 text-sm">
               Sua plataforma completa de receitas e planos alimentares para objetivos fitness.
               Nutrição orientada para seus resultados.
             </p>
+            <div className="flex space-x-4 mt-6">
+              <a href="https://www.instagram.com/big_iron_ct" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-primary-400 transition-colors">
+                <Instagram size={20} />
+              </a>
+              <a href="https://www.facebook.com/profile.php?id=61552627118944" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-primary-400 transition-colors">
+                <Facebook size={20} />
+              </a>
+              <a href="https://api.whatsapp.com/send/?phone=5531983306606&text=Olá%2C+vim+pelo+aplicativo.&type=phone_number&app_absent=0" target="_blank" rel="noopener noreferrer" className="text-neutral-400 hover:text-primary-400 transition-colors">
+                <MessageCircle size={20} />
+              </a>
+            </div>
           </div>
 
           {/* Links */}
@@ -47,7 +58,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li className="flex items-center">
                 <Mail size={16} className="mr-2 text-neutral-400" />
-                <a href="mailto:contato@fitmeal.com" className="hover:text-primary-400 transition-colors">contato@fitmeal.com</a>
+                <a href="bigironbh@gmail.com" className="hover:text-primary-400 transition-colors">bigironbh@gmail.com</a>
               </li>
             </ul>
           </div>

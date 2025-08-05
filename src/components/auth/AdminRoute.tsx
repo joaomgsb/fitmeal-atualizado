@@ -36,7 +36,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
           </div>
           <h1 className="text-2xl font-bold text-neutral-800 mb-2">Acesso Negado</h1>
           <p className="text-neutral-600 mb-6">
-            Você não tem permissão para acessar esta área. Apenas administradores podem gerenciar códigos de acesso.
+            Você não tem permissão para acessar esta área. Apenas administradores podem gerenciar usuários da plataforma.
           </p>
           <button
             onClick={() => window.history.back()}

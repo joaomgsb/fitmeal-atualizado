@@ -216,10 +216,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               autoPlay
               playsInline
               muted
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full w-auto h-auto"
-              style={{
-                transform: 'translate(-50%, -50%) scaleX(-1)' // Espelhar a imagem
-              }}
+              className="w-full h-full object-cover"
+              style={{ transform: 'scaleX(-1)' }}
             />
             {!stream && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -249,7 +247,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           </div>
 
           {/* Canvas oculto para captura */}
-          <canvas ref={canvasRef} className="hidden" />
+          <canvas
+            ref={canvasRef}
+            className="hidden"
+            style={{ transform: 'scaleX(-1)' }}
+          />
         </div>
       </div>
     );

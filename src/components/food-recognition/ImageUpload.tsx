@@ -1,11 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Camera, Upload, X, Loader2 } from 'lucide-react';
 import { uploadImage } from '../../lib/imageUpload';
 
-// Detectar se estamos no Capacitor
-const isCapacitor = () => {
-  return typeof window !== 'undefined' && 'Capacitor' in window;
-};
 
 interface ImageUploadProps {
   onImageSelected: (imageUrl: string) => void;
@@ -38,46 +34,59 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const startCamera = async () => {
     try {
-      // Verificar se estamos no Capacitor
-      if (isCapacitor()) {
-        console.log('🔍 Executando no Capacitor - verificando permissões...');
-        
-        // No Capacitor, usar configurações mais compatíveis
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 }
-          } 
-        });
-        
-        setStream(mediaStream);
-        setShowCamera(true);
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-          // Aguardar o vídeo carregar
-          videoRef.current.onloadedmetadata = () => {
-            console.log('✅ Vídeo carregado no Capacitor');
-          };
-        }
-      } else {
-        // No navegador web, usar configurações padrão
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          } 
-        });
-        
-        setStream(mediaStream);
-        setShowCamera(true);
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
+      console.log('🔍 Iniciando câmera...');
+      
+      // Verificar suporte a mediaDevices
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Seu navegador não suporta acesso à câmera');
       }
+
+      // Configurações mais compatíveis
+      const constraints = {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      };
+
+      console.log('📷 Solicitando permissão da câmera...');
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      console.log('✅ Permissão concedida, configurando stream...');
+      setStream(mediaStream);
+      
+      // Forçar renderização do componente antes de configurar o vídeo
+      setShowCamera(true);
+      
+      // Pequeno atraso para garantir que o componente foi renderizado
+      setTimeout(() => {
+        if (videoRef.current) {
+          console.log('🎥 Configurando elemento de vídeo...');
+          videoRef.current.srcObject = mediaStream;
+          
+          videoRef.current.onloadedmetadata = () => {
+            console.log('✅ Metadados do vídeo carregados');
+            videoRef.current?.play().catch(e => {
+              console.error('❌ Erro ao reproduzir vídeo:', e);
+              onError('Não foi possível iniciar a câmera: ' + e.message);
+            });
+          };
+          
+          videoRef.current.onplay = () => {
+            console.log('▶️ Vídeo em reprodução');
+          };
+          
+          videoRef.current.onerror = (e) => {
+            console.error('❌ Erro no elemento de vídeo:', e);
+            onError('Erro ao acessar a câmera. Verifique as permissões.');
+          };
+        } else {
+          console.error('❌ Elemento de vídeo não encontrado');
+          onError('Erro ao configurar a câmera. Tente novamente.');
+        }
+      }, 100);
     } catch (error) {
       console.error('❌ Erro ao acessar câmera:', error);
       
@@ -98,10 +107,24 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   const stopCamera = () => {
+    console.log('🛑 Parando câmera...');
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      try {
+        stream.getTracks().forEach(track => {
+          console.log(`Parando track: ${track.kind} (${track.label})`);
+          track.stop();
+        });
+      } catch (error) {
+        console.error('Erro ao parar stream:', error);
+      }
       setStream(null);
     }
+    
+    // Limpar o srcObject do vídeo
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
     setShowCamera(false);
   };
 
@@ -158,6 +181,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        console.log('🧹 Limpando câmera ao desmontar componente');
+        stopCamera();
+      }
+    };
+  }, [stream]);
+
   if (showCamera) {
     return (
       <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
@@ -168,6 +200,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               <button
                 onClick={stopCamera}
                 className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                aria-label="Fechar câmera"
               >
                 <X size={24} />
               </button>
@@ -177,12 +210,26 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           </div>
 
           {/* Vídeo da câmera */}
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className="w-full h-full object-cover"
-          />
+          <div className="relative w-full h-full">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full w-auto h-auto"
+              style={{
+                transform: 'translate(-50%, -50%) scaleX(-1)' // Espelhar a imagem
+              }}
+            />
+            {!stream && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <div className="text-white text-center p-4">
+                  <Loader2 className="animate-spin mx-auto mb-2" size={32} />
+                  <p>Iniciando câmera...</p>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Controles da câmera */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-6">

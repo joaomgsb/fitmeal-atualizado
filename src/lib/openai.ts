@@ -404,6 +404,135 @@ export interface FoodRecognitionResult {
   suggestions: string[];
 }
 
+export interface EnergyCalculatorResult {
+  preWorkout: {
+    description: string;
+    recommendation: string;
+  };
+  intraWorkout: {
+    carbs: {
+      description: string;
+      recommendation: string;
+    };
+    hydration: {
+      description: string;
+      recommendation: string;
+    };
+    sodium: {
+      description: string;
+      recommendation: string;
+    };
+  };
+  postWorkout: {
+    description: string;
+    recommendation: string;
+  };
+}
+
+export async function generateEnergyCalculatorResponse(
+  sport: string,
+  intensity: string,
+  duration: string,
+  sweatRate: string
+): Promise<EnergyCalculatorResult> {
+  try {
+    console.log('🔋 Gerando recomendações de energia para exercício...');
+    
+    const prompt = `Você é um especialista em nutrição esportiva. Com base nas informações fornecidas, gere recomendações personalizadas para suplementação energética durante exercícios.
+
+Dados do usuário:
+- Esporte: ${sport}
+- Intensidade: ${intensity}
+- Duração: ${duration}
+- Taxa de transpiração: ${sweatRate}
+
+Gere recomendações específicas para:
+
+1. PRÉ-TREINO (Energia):
+   - Descrição científica sobre carboidratos e cafeína
+   - Recomendação específica de quantidade
+
+2. INTRA-TREINO:
+   a) Carboidratos:
+      - Descrição sobre reposição durante exercício
+      - Recomendação de quantidade por hora
+   
+   b) Hidratação:
+      - Descrição sobre perda de água e desidratação
+      - Recomendação de líquidos por hora
+   
+   c) Sódio:
+      - Descrição sobre perda de eletrólitos
+      - Recomendação baseada na taxa de transpiração
+
+3. PÓS-TREINO (Recuperação):
+   - Descrição sobre restabelecimento do organismo
+   - Recomendação de carboidratos e proteínas
+
+IMPORTANTE:
+- Use linguagem científica mas acessível
+- Seja específico com quantidades
+- Considere a intensidade e duração do exercício
+- Para alta transpiração, recomende mais sódio
+- Mantenha o formato exato do JSON
+
+Responda APENAS com um objeto JSON contendo:
+{
+  "preWorkout": {
+    "description": "Descrição sobre carboidratos e cafeína...",
+    "recommendation": "Você pode se beneficiar com a suplementação de Xg de carboidratos..."
+  },
+  "intraWorkout": {
+    "carbs": {
+      "description": "Descrição sobre carboidratos durante exercício...",
+      "recommendation": "O consumo ideal de carboidratos para você é de X-Y g por hora..."
+    },
+    "hydration": {
+      "description": "Descrição sobre hidratação...",
+      "recommendation": "Você deve ingerir de Xml a Yml de líquidos por hora..."
+    },
+    "sodium": {
+      "description": "Descrição sobre eletrólitos...",
+      "recommendation": "Como você transpira [muito/pouco], aconselhamos..."
+    }
+  },
+  "postWorkout": {
+    "description": "Descrição sobre recuperação...",
+    "recommendation": "Para sua melhor recuperação, sugerimos Xg de carboidratos e Yg de proteína..."
+  }
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "Você é um especialista em nutrição esportiva com vasta experiência em suplementação para diferentes modalidades esportivas. Forneça recomendações precisas e baseadas em evidências científicas."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 2000
+    });
+
+    const responseContent = completion.choices[0]?.message?.content;
+    if (!responseContent) {
+      throw new Error('Resposta vazia da API');
+    }
+
+    const result = JSON.parse(responseContent) as EnergyCalculatorResult;
+    console.log('✅ Recomendações de energia geradas:', result);
+    return result;
+
+  } catch (error) {
+    console.error('❌ Erro ao gerar recomendações de energia:', error);
+    throw error;
+  }
+}
+
 export async function recognizeFoodFromImage(imageUrl: string): Promise<FoodRecognitionResult> {
   try {
     console.log('🔍 Iniciando reconhecimento de alimentos na imagem...');

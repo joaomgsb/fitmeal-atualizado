@@ -23,6 +23,7 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SuggestedRecipesPage from './pages/SuggestedRecipesPage';
+import FoodRecognitionPage from './pages/FoodRecognitionPage';
 import AdminPage from './pages/AdminPage';
 import NewsPage from './pages/NewsPage';
 import NewsDetailPage from './pages/NewsDetailPage';
@@ -44,6 +45,7 @@ function App() {
           <Route path="planos/:id" element={<PrivateRoute><MealPlanDetailPage /></PrivateRoute>} />
           <Route path="planos/personalizado" element={<PrivateRoute><MealPlanDetailPage /></PrivateRoute>} />
           <Route path="sugestoes-receitas" element={<PrivateRoute><SuggestedRecipesPage /></PrivateRoute>} />
+          <Route path="reconhecimento-alimentos" element={<FoodRecognitionPage />} />
           <Route path="tracker" element={<PrivateRoute><TrackerPage /></PrivateRoute>} />
           <Route path="lista-compras" element={<PrivateRoute><ShoppingListPage /></PrivateRoute>} />
           <Route path="perfil" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />

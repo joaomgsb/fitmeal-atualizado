@@ -15,17 +15,29 @@ const Navbar: React.FC = () => {
   const macbookCSS = `
     @media (-webkit-device-pixel-ratio: 2) and (min-width: 1440px) and (max-width: 1728px) {
       .macbook-navbar .nav-links {
-        gap: 0.25rem !important;
+        gap: 0.75rem !important;
       }
       .macbook-navbar .nav-link {
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-        font-size: 0.875rem !important;
-      }
-      .macbook-navbar .container {
         padding-left: 0.75rem !important;
         padding-right: 0.75rem !important;
+        font-size: 0.875rem !important;
       }
+    }
+    
+    /* Garantir espaço adequado na navbar */
+    .macbook-navbar {
+      min-height: 4rem !important;
+    }
+    
+    .macbook-navbar .nav-links {
+      flex: 1;
+      justify-content: center;
+      margin: 0 2rem;
+    }
+    
+    .macbook-navbar .nav-link {
+      white-space: nowrap;
+      min-width: fit-content;
     }
   `;
 
@@ -51,9 +63,10 @@ const Navbar: React.FC = () => {
     { name: 'Início', path: '/' },
     { name: 'Receitas', path: '/receitas' },
     { name: 'News', path: '/news' },
-    { name: 'Planos Alimentares', path: '/planos' },
-    { name: 'Sugestões de Receitas', path: '/sugestoes-receitas' },
-    { name: 'Lista de Compras', path: '/lista-compras' },
+    { name: 'Planos', path: '/planos' },
+    { name: 'Sugestões', path: '/sugestoes-receitas' },
+    { name: 'Reconhecimento IA', path: '/reconhecimento-alimentos' },
+    { name: 'Compras', path: '/lista-compras' },
     { name: 'Rastreador', path: '/tracker' },
   ];
 
@@ -67,10 +80,10 @@ const Navbar: React.FC = () => {
     <>
       <style dangerouslySetInnerHTML={{ __html: macbookCSS }} />
       <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md macbook-navbar">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 container">
-        <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0">
+          <Link to="/" className="flex items-center flex-shrink-0 mr-8">
             <div className="flex items-center gap-2">
               <img 
                 src="/images/logo.jpeg"
@@ -84,13 +97,13 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2 nav-links">
+          <nav className="hidden lg:flex items-center space-x-3 xl:space-x-4 nav-links flex-1 justify-center">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `px-2 py-2 rounded-md transition-colors font-medium text-sm xl:text-base nav-link ${
+                  `px-3 py-2 rounded-md transition-colors font-medium text-sm xl:text-base nav-link whitespace-nowrap ${
                     isActive 
                       ? 'text-primary-600 bg-primary-50' 
                       : 'text-neutral-600 hover:text-primary-500 hover:bg-neutral-100'
@@ -106,7 +119,7 @@ const Navbar: React.FC = () => {
               <div className="relative" ref={adminDropdownRef}>
                 <button
                   onClick={() => setIsAdminDropdownOpen(!isAdminDropdownOpen)}
-                  className={`px-2 py-2 rounded-md transition-colors font-medium flex items-center gap-1 text-sm xl:text-base ${
+                  className={`px-3 py-2 rounded-md transition-colors font-medium flex items-center gap-1 text-sm xl:text-base ${
                     location.pathname.startsWith('/admin')
                       ? 'text-primary-600 bg-primary-50' 
                       : 'text-neutral-600 hover:text-primary-500 hover:bg-neutral-100'
@@ -149,7 +162,7 @@ const Navbar: React.FC = () => {
           </nav>
 
           {/* User Profile & Mobile Menu Button */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 ml-8">
             <Link 
               to="/perfil" 
               className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-neutral-100 text-neutral-600 hover:bg-primary-100 hover:text-primary-500 transition-colors"

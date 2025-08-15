@@ -1,13 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle, Dumbbell, Utensils, ShoppingBag, LineChart } from 'lucide-react';
+import { ArrowRight, CheckCircle, Dumbbell, Utensils, ShoppingBag, LineChart, Camera } from 'lucide-react';
 import HeroSection from '../components/home/HeroSection';
 import FeatureCard from '../components/home/FeatureCard';
 
 
 const HomePage: React.FC = () => {
   const features = [
+    {
+      icon: <Camera size={24} className="text-primary-500" />,
+      title: "Reconhecimento por IA",
+      description: "Tire uma foto do seu alimento e descubra automaticamente as calorias e macronutrientes usando inteligência artificial."
+    },
     {
       icon: <Utensils size={24} className="text-primary-500" />,
       title: "Receitas Fitness",
@@ -55,7 +60,7 @@ const HomePage: React.FC = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
             {features.map((feature, index) => (
               <FeatureCard 
                 key={index}
@@ -179,6 +184,137 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Recognition Section */}
+      <section className="py-20 bg-gradient-to-br from-primary-50 to-accent-50">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-3xl font-bold font-display mb-6">
+                  <span className="text-primary-500">Reconhecimento por IA</span> - 
+                  Descubra o que está no seu prato
+                </h2>
+                <p className="text-neutral-600 text-lg mb-8">
+                  Tire uma foto do seu alimento e nossa inteligência artificial irá identificar automaticamente os ingredientes e calcular as informações nutricionais detalhadas.
+                </p>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                      <Camera size={16} className="text-white" />
+                    </div>
+                    <span className="text-neutral-700">Foto instantânea ou upload de imagem</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-energy-500 rounded-full flex items-center justify-center">
+                      <CheckCircle size={16} className="text-white" />
+                    </div>
+                    <span className="text-neutral-700">Identificação automática de alimentos</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-accent-500 rounded-full flex items-center justify-center">
+                      <LineChart size={16} className="text-white" />
+                    </div>
+                    <span className="text-neutral-700">Análise nutricional detalhada</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center">
+                      <CheckCircle size={16} className="text-white" />
+                    </div>
+                    <span className="text-neutral-700">Sugestões personalizadas de melhoria</span>
+                  </div>
+                </div>
+
+                <Link 
+                  to="/reconhecimento-alimentos" 
+                  className="inline-flex items-center bg-primary-500 text-white font-medium rounded-lg px-6 py-3 shadow-md hover:shadow-lg hover:bg-primary-600 transition-all"
+                >
+                  Experimentar Agora <ArrowRight size={18} className="ml-2" />
+                </Link>
+              </motion.div>
+            </div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              <div className="bg-white rounded-2xl p-8 shadow-2xl">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                      <Camera size={24} className="text-primary-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-neutral-800">Reconhecimento Inteligente</h3>
+                      <p className="text-neutral-600">Powered by OpenAI GPT-4 Vision</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-neutral-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-neutral-800">Frango Grelhado</span>
+                        <span className="text-sm text-success">95% confiança</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div className="text-center">
+                          <div className="font-bold text-primary-600">165</div>
+                          <div className="text-neutral-500">kcal</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-energy-600">31g</div>
+                          <div className="text-neutral-500">Proteína</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-accent-600">0g</div>
+                          <div className="text-neutral-500">Carboidratos</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-neutral-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-neutral-800">Arroz Integral</span>
+                        <span className="text-sm text-warning">87% confiança</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div className="text-center">
+                          <div className="font-bold text-primary-600">110</div>
+                          <div className="text-neutral-500">kcal</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-energy-600">2.5g</div>
+                          <div className="text-neutral-500">Proteína</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-accent-600">23g</div>
+                          <div className="text-neutral-500">Carboidratos</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-success-50 to-warning-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-neutral-800 mb-2">💡 Sugestão</h4>
+                    <p className="text-sm text-neutral-700">
+                      Adicione vegetais coloridos para aumentar o valor nutricional da refeição.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>

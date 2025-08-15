@@ -12,8 +12,10 @@
   "dependencies": {
     "@capacitor/android": "^7.4.1",
     "@capacitor/assets": "^3.0.5",
+    "@capacitor/camera": "^7.0.2",
     "@capacitor/cli": "^7.4.1",
     "@capacitor/core": "^7.4.1",
+    "@capacitor/device": "^7.0.2",
     "@capacitor/filesystem": "^7.1.4",
     "@capacitor/share": "^7.0.2",
     "@react-pdf/renderer": "^4.3.0",

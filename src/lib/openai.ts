@@ -383,3 +383,121 @@ export async function getFoodNutritionInfo(foodName: string, amount: string = "1
     };
   }
 }
+
+export interface FoodRecognitionResult {
+  foods: Array<{
+    name: string;
+    confidence: number;
+    estimatedAmount: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber?: number;
+    sugar?: number;
+    sodium?: number;
+  }>;
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
+  suggestions: string[];
+}
+
+export async function recognizeFoodFromImage(imageUrl: string): Promise<FoodRecognitionResult> {
+  try {
+    console.log('🔍 Iniciando reconhecimento de alimentos na imagem...');
+    
+    const prompt = `Analise esta imagem de comida e identifique todos os alimentos visíveis. Para cada alimento identificado, forneça:
+
+1. Nome do alimento em português
+2. Quantidade estimada (ex: "1 porção", "200g", "1 unidade média")
+3. Informações nutricionais aproximadas para essa quantidade
+4. Nível de confiança na identificação (0-100)
+
+IMPORTANTE:
+- Identifique TODOS os alimentos visíveis na imagem
+- Seja específico sobre quantidades e porções
+- Forneça informações nutricionais realistas
+- Se houver múltiplos alimentos, liste cada um separadamente
+- Inclua sugestões de como melhorar a refeição nutricionalmente
+
+Responda APENAS com um objeto JSON contendo:
+{
+  "foods": [
+    {
+      "name": "Nome do alimento",
+      "confidence": 85,
+      "estimatedAmount": "200g",
+      "calories": 150,
+      "protein": 25,
+      "carbs": 5,
+      "fat": 3,
+      "fiber": 2,
+      "sugar": 1,
+      "sodium": 300
+    }
+  ],
+  "totalCalories": 150,
+  "totalProtein": 25,
+  "totalCarbs": 5,
+  "totalFat": 3,
+  "suggestions": ["Sugestões para melhorar a refeição"]
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "Você é um especialista em nutrição esportiva e reconhecimento de alimentos. Analise imagens de comida com precisão e forneça informações nutricionais detalhadas e realistas. Seja específico sobre quantidades e porções."
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: prompt
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl
+              }
+            }
+          ]
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 2000
+    });
+
+    const responseContent = completion.choices[0]?.message?.content;
+    if (!responseContent) {
+      throw new Error('Resposta vazia da API');
+    }
+
+    const result = JSON.parse(responseContent) as FoodRecognitionResult;
+    
+    // Calcular totais se não fornecidos
+    if (!result.totalCalories) {
+      result.totalCalories = result.foods.reduce((sum, food) => sum + food.calories, 0);
+    }
+    if (!result.totalProtein) {
+      result.totalProtein = result.foods.reduce((sum, food) => sum + food.protein, 0);
+    }
+    if (!result.totalCarbs) {
+      result.totalCarbs = result.foods.reduce((sum, food) => sum + food.carbs, 0);
+    }
+    if (!result.totalFat) {
+      result.totalFat = result.foods.reduce((sum, food) => sum + food.fat, 0);
+    }
+
+    console.log('✅ Reconhecimento concluído:', result);
+    return result;
+
+  } catch (error) {
+    console.error('❌ Erro no reconhecimento de alimentos:', error);
+    throw error;
+  }
+}

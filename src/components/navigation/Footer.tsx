@@ -11,7 +11,7 @@ const Footer: React.FC = () => {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center">
               <span className="text-xl font-bold text-white">
-                Big<span className="text-primary-400">Iron</span>
+                Fit<span className="text-primary-400">Meal</span>
               </span>
             </Link>
             <p className="mt-4 text-sm">
@@ -58,7 +58,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li className="flex items-center">
                 <Mail size={16} className="mr-2 text-neutral-400" />
-                <a href="bigironbh@gmail.com" className="hover:text-primary-400 transition-colors">bigironbh@gmail.com</a>
+                <a href="fitmeal@gmail.com" className="hover:text-primary-400 transition-colors">fitmeal@gmail.com</a>
               </li>
             </ul>
           </div>

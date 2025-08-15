@@ -27,7 +27,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     try {
       const imageUrl = await uploadImage(file);
       onImageSelected(imageUrl);
-    } catch (error) {
+    } catch {
       onError('Erro ao fazer upload da imagem. Tente novamente.');
     }
   };
@@ -41,12 +41,17 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         throw new Error('Seu navegador não suporta acesso à câmera');
       }
 
-      // Configurações mais compatíveis
+      // Detectar se é dispositivo móvel
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log('📱 Dispositivo móvel detectado:', isMobile);
+
+      // Configurações otimizadas para mobile
       const constraints = {
         video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          facingMode: 'environment', // Usar câmera traseira
+          width: { ideal: isMobile ? 1280 : 1920, max: 1920 },
+          height: { ideal: isMobile ? 720 : 1080, max: 1080 },
+          aspectRatio: { ideal: 16/9 }
         },
         audio: false
       };
@@ -68,6 +73,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           
           videoRef.current.onloadedmetadata = () => {
             console.log('✅ Metadados do vídeo carregados');
+            console.log('📐 Dimensões do vídeo:', {
+              videoWidth: videoRef.current?.videoWidth,
+              videoHeight: videoRef.current?.videoHeight,
+              clientWidth: videoRef.current?.clientWidth,
+              clientHeight: videoRef.current?.clientHeight
+            });
             videoRef.current?.play().catch(e => {
               console.error('❌ Erro ao reproduzir vídeo:', e);
               onError('Não foi possível iniciar a câmera: ' + e.message);
@@ -78,8 +89,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             console.log('▶️ Vídeo em reprodução');
           };
           
-          videoRef.current.onerror = (e) => {
-            console.error('❌ Erro no elemento de vídeo:', e);
+          videoRef.current.onerror = () => {
+            console.error('❌ Erro no elemento de vídeo');
             onError('Erro ao acessar a câmera. Verifique as permissões.');
           };
         } else {
@@ -141,7 +152,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
+    // Limpar o canvas
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
     // Desenhar o frame atual do vídeo no canvas
+    // Para dispositivos móveis, garantir que a orientação seja correta
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     // Converter para blob e fazer upload
@@ -153,10 +168,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         const imageUrl = await uploadImage(file);
         onImageSelected(imageUrl);
         stopCamera();
-      } catch (error) {
+      } catch {
         onError('Erro ao processar a foto. Tente novamente.');
       }
-    }, 'image/jpeg', 0.8);
+    }, 'image/jpeg', 0.9);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -172,7 +187,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         try {
           const imageUrl = await uploadImage(file);
           onImageSelected(imageUrl);
-        } catch (error) {
+        } catch {
           onError('Erro ao fazer upload da imagem. Tente novamente.');
         }
       } else {
@@ -216,8 +231,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               autoPlay
               playsInline
               muted
-              className="w-full h-full object-cover"
-              style={{ transform: 'scaleX(-1)' }}
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full w-auto h-auto"
             />
             {!stream && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -247,11 +261,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           </div>
 
           {/* Canvas oculto para captura */}
-          <canvas
-            ref={canvasRef}
-            className="hidden"
-            style={{ transform: 'scaleX(-1)' }}
-          />
+          <canvas ref={canvasRef} className="hidden" />
         </div>
       </div>
     );

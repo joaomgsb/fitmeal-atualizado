@@ -20,6 +20,7 @@ import {
 } from 'recharts';
 import AvatarUpload from '../components/profile/AvatarUpload';
 import CalculatorTab from '../components/profile/CalculatorTab';
+import ProgressPhotos from '../components/profile/ProgressPhotos';
 
 export interface UserProfile {
   name: string;
@@ -52,6 +53,13 @@ export interface UserProfile {
     hips: number;
     arms: number;
     thighs: number;
+  }>;
+  progressPhotos: Array<{
+    id: string;
+    date: string;
+    imageUrl: string;
+    category: 'front' | 'back' | 'side' | 'other';
+    notes?: string;
   }>;
 }
 
@@ -100,6 +108,9 @@ const ProfilePage: React.FC = () => {
     addWeightEntry,
     addBodyFatEntry,
     addMeasurements,
+    addProgressPhoto,
+    deleteProgressPhoto,
+    updateProgressPhoto,
     resetWeightHistory,
     resetBodyFatHistory,
     resetMeasurements
@@ -1432,6 +1443,18 @@ const ProfilePage: React.FC = () => {
                         </p>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Seção de Fotos de Progresso */}
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                  <div className="p-6">
+                    <ProgressPhotos
+                      photos={localProfile.progressPhotos || []}
+                      onAddPhoto={addProgressPhoto}
+                      onDeletePhoto={deleteProgressPhoto}
+                      onUpdatePhoto={updateProgressPhoto}
+                    />
                   </div>
                 </div>
               </div>

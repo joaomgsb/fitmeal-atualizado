@@ -23,6 +23,14 @@ export interface BodyMeasurements {
   thighs: number;
 }
 
+export interface ProgressPhoto {
+  id: string;
+  date: string;
+  imageUrl: string;
+  category: 'front' | 'back' | 'side' | 'other';
+  notes?: string;
+}
+
 export interface UserProfile {
   name: string;
   email: string;
@@ -49,6 +57,7 @@ export interface UserProfile {
   weightHistory: WeightEntry[];
   bodyFatHistory: BodyFatEntry[];
   measurements: BodyMeasurements[];
+  progressPhotos: ProgressPhoto[];
   avatar?: string;
 }
 
@@ -72,7 +81,12 @@ export const useProfile = () => {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setProfile(docSnap.data() as UserProfile);
+          const existingProfile = docSnap.data() as UserProfile;
+          // Garantir que o campo progressPhotos existe mesmo para perfis antigos
+          if (!existingProfile.progressPhotos) {
+            existingProfile.progressPhotos = [];
+          }
+          setProfile(existingProfile);
         } else {
           // Criar perfil vazio se não existir
           const emptyProfile: UserProfile = {
@@ -99,7 +113,8 @@ export const useProfile = () => {
             startDate: new Date().toISOString(),
             weightHistory: [],
             bodyFatHistory: [],
-            measurements: []
+            measurements: [],
+            progressPhotos: []
           };
 
           await setDoc(docRef, emptyProfile);
@@ -309,6 +324,106 @@ export const useProfile = () => {
     }
   };
 
+  // Função para adicionar uma nova foto de progresso
+  const addProgressPhoto = async (photo: Omit<ProgressPhoto, 'id'>) => {
+    console.log('addProgressPhoto called with:', photo);
+    console.log('Current profile:', profile);
+    console.log('Current user:', currentUser);
+    
+    if (!profile || !currentUser) {
+      console.error('Profile or currentUser is null');
+      throw new Error('Perfil não encontrado');
+    }
+    
+    // Limpar campos undefined do objeto photo
+    const cleanPhoto = Object.fromEntries(
+      Object.entries(photo).filter(([_, value]) => value !== undefined)
+    ) as Omit<ProgressPhoto, 'id'>;
+
+    const newPhoto: ProgressPhoto = {
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      ...cleanPhoto
+    };
+
+    console.log('New photo object:', newPhoto);
+    console.log('Current progressPhotos:', profile.progressPhotos);
+
+    // Garantir que progressPhotos existe
+    const currentPhotos = profile.progressPhotos || [];
+    const newPhotos = [...currentPhotos, newPhoto];
+    
+    // Limpar campos undefined do perfil atualizado
+    const updatedProfile = Object.fromEntries(
+      Object.entries({
+        ...profile,
+        progressPhotos: newPhotos
+      }).filter(([_, value]) => value !== undefined)
+    );
+
+    console.log('Updated profile:', updatedProfile);
+
+    try {
+      const docRef = doc(db, 'users', currentUser.uid);
+      await setDoc(docRef, updatedProfile, { merge: true });
+      setProfile(updatedProfile as UserProfile);
+      console.log('Photo added successfully');
+    } catch (error) {
+      console.error('Error adding photo to Firestore:', error);
+      throw error;
+    }
+  };
+
+  // Função para excluir uma foto de progresso
+  const deleteProgressPhoto = async (photoId: string) => {
+    if (!profile || !currentUser) {
+      throw new Error('Perfil não encontrado');
+    }
+    
+    const currentPhotos = profile.progressPhotos || [];
+    const newPhotos = currentPhotos.filter(photo => photo.id !== photoId);
+    
+    // Limpar campos undefined
+    const updatedProfile = Object.fromEntries(
+      Object.entries({
+        ...profile,
+        progressPhotos: newPhotos
+      }).filter(([_, value]) => value !== undefined)
+    );
+
+    const docRef = doc(db, 'users', currentUser.uid);
+    await setDoc(docRef, updatedProfile, { merge: true });
+    setProfile(updatedProfile as UserProfile);
+  };
+
+  // Função para atualizar uma foto de progresso
+  const updateProgressPhoto = async (photoId: string, updates: Partial<ProgressPhoto>) => {
+    if (!profile || !currentUser) {
+      throw new Error('Perfil não encontrado');
+    }
+    
+    // Limpar campos undefined das atualizações
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, value]) => value !== undefined)
+    );
+    
+    const currentPhotos = profile.progressPhotos || [];
+    const newPhotos = currentPhotos.map(photo => 
+      photo.id === photoId ? { ...photo, ...cleanUpdates } : photo
+    );
+    
+    // Limpar campos undefined do perfil atualizado
+    const updatedProfile = Object.fromEntries(
+      Object.entries({
+        ...profile,
+        progressPhotos: newPhotos
+      }).filter(([_, value]) => value !== undefined)
+    );
+
+    const docRef = doc(db, 'users', currentUser.uid);
+    await setDoc(docRef, updatedProfile, { merge: true });
+    setProfile(updatedProfile as UserProfile);
+  };
+
   return { 
     profile, 
     loading, 
@@ -318,6 +433,9 @@ export const useProfile = () => {
     addWeightEntry, 
     addMeasurements,
     addBodyFatEntry,
+    addProgressPhoto,
+    deleteProgressPhoto,
+    updateProgressPhoto,
     resetWeightHistory,
     resetBodyFatHistory,
     resetMeasurements 

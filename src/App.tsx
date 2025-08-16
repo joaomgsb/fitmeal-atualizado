@@ -45,7 +45,7 @@ function App() {
           <Route path="planos/:id" element={<PrivateRoute><MealPlanDetailPage /></PrivateRoute>} />
           <Route path="planos/personalizado" element={<PrivateRoute><MealPlanDetailPage /></PrivateRoute>} />
           <Route path="sugestoes-receitas" element={<PrivateRoute><SuggestedRecipesPage /></PrivateRoute>} />
-          <Route path="reconhecimento-alimentos" element={<FoodRecognitionPage />} />
+          <Route path="reconhecimento-alimentos" element={<PrivateRoute><FoodRecognitionPage /></PrivateRoute>} />
           <Route path="tracker" element={<PrivateRoute><TrackerPage /></PrivateRoute>} />
           <Route path="lista-compras" element={<PrivateRoute><ShoppingListPage /></PrivateRoute>} />
           <Route path="perfil" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />

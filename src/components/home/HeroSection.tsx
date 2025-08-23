@@ -19,7 +19,7 @@ const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="relative pt-16 md:pt-20 pb-20 md:pb-32 overflow-hidden">
+    <section className="hero-section relative pt-16 md:pt-20 pb-20 md:pb-32 overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <img 

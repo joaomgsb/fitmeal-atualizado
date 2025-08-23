@@ -4,9 +4,12 @@ import Navbar from '../components/navigation/Navbar';
 import Footer from '../components/navigation/Footer';
 import TermsGuard from '../components/TermsGuard';
 import { useAuth } from '../contexts/AuthContext';
+import { TourOverlay, TourWelcomeModal, TourFloatingButton } from '../components/tour';
+import { useTour } from '../contexts/TourContext';
 
 const MainLayout: React.FC = () => {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
+  const { isTourActive } = useTour();
 
   // Verifica a rota atual para aplicar estilos específicos
   const location = useLocation();
@@ -20,7 +23,7 @@ const MainLayout: React.FC = () => {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className={mainClasses}>
-        {user ? (
+        {currentUser ? (
           <TermsGuard>
             <div className={!isHomePage && !isPlansPage ? 'container mx-auto px-4' : ''}>
               <Outlet />
@@ -33,6 +36,11 @@ const MainLayout: React.FC = () => {
         )}
       </main>
       <Footer />
+      
+      {/* Componentes do Tour */}
+      {currentUser && <TourOverlay />}
+      {currentUser && <TourWelcomeModal />}
+      {currentUser && <TourFloatingButton />}
     </div>
   );
 };

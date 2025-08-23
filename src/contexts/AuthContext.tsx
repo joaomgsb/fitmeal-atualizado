@@ -8,7 +8,7 @@ import {
   UserCredential,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import { toast } from 'react-hot-toast';
 
@@ -35,8 +35,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const signUp = (email: string, password: string) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+  const signUp = async (email: string, password: string) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Criar documento do usuário no Firestore
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
+      await setDoc(userDocRef, {
+        email: userCredential.user.email,
+        createdAt: new Date(),
+        isNewUser: true,
+        hasCompletedTour: false,
+        isDeleted: false
+      });
+      
+      return userCredential;
+    } catch (error) {
+      throw error;
+    }
   };
 
   const signIn = async (email: string, password: string) => {
@@ -87,6 +103,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             toast.error('Sua conta foi excluída. Por favor, faça login novamente.');
             await logout();
           }
+        } else {
+          // Usuário não existe no Firestore, criar documento
+          await setDoc(userDocRef, {
+            email: user.email,
+            createdAt: new Date(),
+            isNewUser: true,
+            hasCompletedTour: false,
+            isDeleted: false
+          });
         }
       }
     });

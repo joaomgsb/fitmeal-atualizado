@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { TourProvider } from './contexts/TourContext';
 import { useScrollToTop } from './hooks/useScrollToTop';
 import PrivateRoute from './components/auth/PrivateRoute';
 import AdminRoute from './components/auth/AdminRoute';
@@ -36,32 +37,34 @@ function App() {
 
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="receitas" element={<RecipesPage />} />
-          <Route path="receitas/:id" element={<RecipeDetailPage />} />
-          <Route path="planos" element={<PrivateRoute><MealPlansPage /></PrivateRoute>} />
-          <Route path="planos/:id" element={<PrivateRoute><MealPlanDetailPage /></PrivateRoute>} />
-          <Route path="planos/personalizado" element={<PrivateRoute><MealPlanDetailPage /></PrivateRoute>} />
-          <Route path="sugestoes-receitas" element={<PrivateRoute><SuggestedRecipesPage /></PrivateRoute>} />
-          <Route path="reconhecimento-alimentos" element={<PrivateRoute><FoodRecognitionPage /></PrivateRoute>} />
-          <Route path="tracker" element={<PrivateRoute><TrackerPage /></PrivateRoute>} />
-          <Route path="lista-compras" element={<PrivateRoute><ShoppingListPage /></PrivateRoute>} />
-          <Route path="perfil" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-          <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
-          <Route path="admin/termos" element={<AdminRoute><AdminTermsPage /></AdminRoute>} />
-          <Route path="news" element={<NewsPage />} />
-          <Route path="news/:id" element={<NewsDetailPage />} />
-          <Route path="admin/news" element={<AdminRoute><AdminNewsPage /></AdminRoute>} />
-          <Route path="termos-de-uso" element={<TermsOfUsePage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/cadastro" element={<SignUpPage />} />
-        <Route path="/recuperar-senha" element={<ResetPasswordPage />} />
-      </Routes>
-      <Toaster position="top-right" />
+      <TourProvider>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="receitas" element={<RecipesPage />} />
+            <Route path="receitas/:id" element={<RecipeDetailPage />} />
+            <Route path="planos" element={<PrivateRoute><MealPlansPage /></PrivateRoute>} />
+            <Route path="planos/:id" element={<PrivateRoute><MealPlanDetailPage /></PrivateRoute>} />
+            <Route path="planos/personalizado" element={<PrivateRoute><MealPlanDetailPage /></PrivateRoute>} />
+            <Route path="sugestoes-receitas" element={<PrivateRoute><SuggestedRecipesPage /></PrivateRoute>} />
+            <Route path="reconhecimento-alimentos" element={<PrivateRoute><FoodRecognitionPage /></PrivateRoute>} />
+            <Route path="tracker" element={<PrivateRoute><TrackerPage /></PrivateRoute>} />
+            <Route path="lista-compras" element={<PrivateRoute><ShoppingListPage /></PrivateRoute>} />
+            <Route path="perfil" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+            <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+            <Route path="admin/termos" element={<AdminRoute><AdminTermsPage /></AdminRoute>} />
+            <Route path="news" element={<NewsPage />} />
+            <Route path="news/:id" element={<NewsDetailPage />} />
+            <Route path="admin/news" element={<AdminRoute><AdminNewsPage /></AdminRoute>} />
+            <Route path="termos-de-uso" element={<TermsOfUsePage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/cadastro" element={<SignUpPage />} />
+          <Route path="/recuperar-senha" element={<ResetPasswordPage />} />
+        </Routes>
+        <Toaster position="top-right" />
+      </TourProvider>
     </AuthProvider>
   );
 }

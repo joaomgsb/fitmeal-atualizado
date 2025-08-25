@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTour } from '../../contexts/TourContext';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const TourTest: React.FC = () => {
   const { 
@@ -11,8 +12,11 @@ const TourTest: React.FC = () => {
     nextStep,
     previousStep,
     skipTour,
-    completeTour
+    completeTour,
+    openMobileMenu,
+    closeMobileMenu
   } = useTour();
+  const isMobile = useIsMobile();
 
   return (
     <div className="p-4 bg-gray-100 rounded-lg">
@@ -22,6 +26,8 @@ const TourTest: React.FC = () => {
         <p><strong>Tour Ativo:</strong> {isTourActive ? 'Sim' : 'Não'}</p>
         <p><strong>Passo Atual:</strong> {currentStep + 1} de {tourSteps.length}</p>
         <p><strong>Mostrar para Novo Usuário:</strong> {showTourForNewUser ? 'Sim' : 'Não'}</p>
+        <p><strong>Dispositivo:</strong> {isMobile ? 'Mobile' : 'Desktop'}</p>
+        <p><strong>Passos do Tour:</strong> {isMobile ? 'Mobile' : 'Desktop'}</p>
       </div>
 
       <div className="mt-4 space-y-2">
@@ -53,6 +59,41 @@ const TourTest: React.FC = () => {
             >
               Pular Tour
             </button>
+          </div>
+        )}
+
+        {isMobile && (
+          <div className="mt-4 space-y-2">
+            <h4 className="font-medium text-sm">Controles Mobile:</h4>
+            <button
+              onClick={openMobileMenu}
+              className="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600"
+            >
+              Abrir Menu Mobile
+            </button>
+            <button
+              onClick={closeMobileMenu}
+              className="w-full bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600"
+            >
+              Fechar Menu Mobile
+            </button>
+            
+            <div className="mt-4 p-3 bg-gray-200 rounded text-xs">
+              <h5 className="font-medium mb-2">Debug Mobile:</h5>
+              <button
+                onClick={() => {
+                  console.log('🔍 Verificando elementos do menu mobile...');
+                  const mobileMenuLinks = document.querySelectorAll('.lg\\:hidden nav a');
+                  console.log('Links encontrados:', mobileMenuLinks.length);
+                  mobileMenuLinks.forEach((link, index) => {
+                    console.log(`  ${index}: "${link.textContent?.trim()}" -> ${link.getAttribute('href')}`);
+                  });
+                }}
+                className="w-full bg-blue-500 text-white py-2 px-3 rounded text-xs"
+              >
+                Verificar Links do Menu
+              </button>
+            </div>
           </div>
         )}
       </div>

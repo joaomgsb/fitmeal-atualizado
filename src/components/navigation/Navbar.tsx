@@ -3,12 +3,14 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X, User, ChevronDown, Settings, FileText, Newspaper } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProfile } from '../../hooks/useProfile';
+import { useTour } from '../../contexts/TourContext';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
   const location = useLocation();
   const { profile } = useProfile();
+  const { isTourActive } = useTour();
   const adminDropdownRef = useRef<HTMLDivElement>(null);
 
   // CSS específico para MacBook M1
@@ -57,6 +59,25 @@ const Navbar: React.FC = () => {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Event listeners para o tour mobile
+  useEffect(() => {
+    const handleOpenMobileMenu = () => {
+      setIsMenuOpen(true);
+    };
+
+    const handleCloseMobileMenu = () => {
+      setIsMenuOpen(false);
+    };
+
+    window.addEventListener('openMobileMenu', handleOpenMobileMenu);
+    window.addEventListener('closeMobileMenu', handleCloseMobileMenu);
+
+    return () => {
+      window.removeEventListener('openMobileMenu', handleOpenMobileMenu);
+      window.removeEventListener('closeMobileMenu', handleCloseMobileMenu);
+    };
   }, []);
 
   const navLinks = [
